@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>iPad Dashboard with Icons</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #38bdf8;
+            --accent-green: #34d399;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding: 20px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* 頂部標題與更新提示 */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #334155;
+        }
+
+        header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        #update-status {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* 儀表板網格佈局 */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: auto auto 1fr;
+            gap: 15px;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-title {
+            font-size: 1rem;
+            font-weight: bold;
+            color: var(--accent);
+            margin-bottom: 10px;
+            border-bottom: 1px solid #334155;
+            padding-bottom: 5px;
+        }
+
+        /* 1. 時間樣式 */
+        .time-box {
+            text-align: center;
+            padding: 5px 0;
+        }
+        .time-box .city {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        .time-box .clock {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--text-main);
+            font-family: monospace;
+            margin: 5px 0;
+        }
+        .time-box .date {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+        .lunar-date {
+            color: #fbbf24 !important; /* 橙金色突出農曆 */
+            font-weight: bold;
+            margin-top: 3px;
+        }
+
+        /* 2. 天氣與 Icon 樣式 */
+        .weather-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .weather-current {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1.1rem;
+        }
+        .weather-current i {
+            font-size: 2.2rem;
+            color: #fbbf24; /* 即時天氣 Icon 顏色 */
+            margin-right: 8px;
+        }
+        .weather-info {
+            display: flex;
+            align-items: center;
+        }
+        .weather-current .temp {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+        .weather-forecast {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 5px;
+            padding-top: 8px;
+            border-top: 1px dashed #334155;
+            font-size: 0.85rem;
+        }
+        .forecast-day {
+            background: rgba(0,0,0,0.15);
+            padding: 6px;
+            border-radius: 6px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+        .forecast-day i {
+            font-size: 1.2rem;
+            color: var(--accent);
+        }
+
+        /* 3. 匯率樣式 */
+        .rate-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            padding: 10px 0;
+        }
+        .rate-value {
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: var(--accent-green);
+        }
+        .rate-label {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-top: 5px;
+        }
+
+        /* 4 & 5. 新聞樣式 */
+        .news-card {
+            grid-column: span 1;
+            grid-row: span 1;
+            height: 100%;
+            overflow: hidden;
+        }
+        .news-list {
+            list-style: none;
+            overflow-y: auto;
+            flex: 1;
+            padding-right: 5px;
+        }
+        .news-item {
+            padding: 8px 0;
+            border-bottom: 1px solid #334155;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+        .news-item:last-child {
+            border-bottom: none;
+        }
+        .news-item a {
+            color: var(--text-main);
+            text-decoration: none;
+        }
+        .news-item a:hover {
+            color: var(--accent);
+        }
+        .news-time {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 3px;
+        }
+
+        /* iPad 橫屏特定最佳化 */
+        @media (min-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: repeat(3, 1fr);
+                grid-template-rows: auto auto;
+            }
+            .news-card {
+                grid-row: span 1;
+                height: 380px; 
+            }
+        }
+
+        /* 滾動條美化 */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.1);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>iPad 智能生活儀表板</h1>
+        <div id="update-status">正在載入數據...</div>
+    </header>
+
+    <div class="dashboard-grid">
+        
+        <div class="card time-box">
+            <div class="card-title">卡加利時間 (Calgary)</div>
+            <div class="city">🇨🇦 Calgary</div>
+            <div class="clock" id="clk-calgary">00:00:00</div>
+            <div class="date" id="date-calgary">----年--月--日</div>
+        </div>
+
+        <div class="card time-box">
+            <div class="card-title">香港時間 (Hong Kong)</div>
+            <div class="city">🇭🇰 香港</div>
+            <div class="clock" id="clk-hk">00:00:00</div>
+            <div class="date" id="date-hk">----年--月--日</div>
+            <div class="date lunar-date" id="lunar-hk">農曆載入中...</div>
+        </div>
+
+        <div class="card time-box">
+            <div class="card-title">東京時間 (Tokyo)</div>
+            <div class="city">🇯🇵 東京</div>
+            <div class="clock" id="clk-tokyo">00:00:00</div>
+            <div class="date" id="date-tokyo">----年--月--日</div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">卡加利即時天氣</div>
+            <div class="weather-container" id="weather-calgary">
+                <div class="weather-current"><span>讀取中...</span><span class="temp">--°C</span></div>
+                <div class="weather-forecast"><div>--</div><div>--</div></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">香港即時天氣</div>
+            <div class="weather-container" id="weather-hk">
+                <div class="weather-current"><span>讀取中...</span><span class="temp">--°C</span></div>
+                <div class="weather-forecast"><div>--</div><div>--</div></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">東京即時天氣</div>
+            <div class="weather-container" id="weather-tokyo">
+                <div class="weather-current"><span>讀取中...</span><span class="temp">--°C</span></div>
+                <div class="weather-forecast"><div>--</div><div>--</div></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">外匯匯率 (市場即時)</div>
+            <div class="rate-container">
+                <div class="rate-value" id="usd-cad">0.0000</div>
+                <div class="rate-label">1 USD 美元 = CAD 加幣</div>
+            </div>
+        </div>
+
+        <div class="card news-card">
+            <div class="card-title">香港即時新聞 (RTHK)</div>
+            <ul class="news-list" id="hk-news">
+                <li class="news-item">新聞載入中...</li>
+            </ul>
+        </div>
+
+        <div class="card news-card">
+            <div class="card-title">全球即時新聞 (BBC World)</div>
+            <ul class="news-list" id="global-news">
+                <li class="news-item">新聞載入中...</li>
+            </ul>
+        </div>
+
+    </div>
+
+    <script>
+        // 天氣代碼對應簡易文字與 Bootstrap Icon 類名
+        function getWeatherInfo(code) {
+            const mapping = {
+                0: { text: "晴朗", icon: "bi-sun-fill" },
+                1: { text: "大體晴朗", icon: "bi-cloud-sun-fill" },
+                2: { text: "多雲", icon: "bi-cloud-fill" },
+                3: { text: "陰天", icon: "bi-clouds-fill" },
+                45: { text: "霧", icon: "bi-cloud-fog-fill" },
+                48: { text: "霧", icon: "bi-cloud-fog-fill" },
+                51: { text: "毛毛雨", icon: "bi-cloud-drizzle-fill" },
+                53: { text: "毛毛雨", icon: "bi-cloud-drizzle-fill" },
+                55: { text: "毛毛雨", icon: "bi-cloud-drizzle-fill" },
+                61: { text: "小雨", icon: "bi-cloud-rain-fill" },
+                63: { text: "中雨", icon: "bi-cloud-rain-heavy-fill" },
+                65: { text: "大雨", icon: "bi-cloud-rain-heavy-fill" },
+                71: { text: "小雪", icon: "bi-cloud-snow-fill" },
+                73: { text: "中雪", icon: "bi-cloud-snow-fill" },
+                75: { text: "大雪", icon: "bi-snowflake" },
+                80: { text: "陣雨", icon: "bi-cloud-hail" },
+                81: { text: "陣雨", icon: "bi-cloud-hail" },
+                82: { text: "暴雨", icon: "bi-cloud-lightning-rain-fill" },
+                95: { text: "雷暴", icon: "bi-cloud-lightning-fill" }
+            };
+            return mapping[code] || { text: "多雲/晴", icon: "bi-cloud-sun-fill" };
+        }
+
+        // 獲取中文陰曆農曆
+        function getLunarDateString(date) {
+            try {
+                const formatter = new Intl.DateTimeFormat('zh-HK-u-ca-chinese', {
+                    month: 'long',
+                    day: 'numeric'
+                });
+                let lunar = formatter.format(date);
+                return "農曆 " + lunar.replace(/ /g, "");
+            } catch(e) {
+                return "農曆未知";
+            }
+        }
+
+        // 1. 每秒更新時鐘與日期
+        function updateClocks() {
+            const now = new Date();
+            const options = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+            const dateOptions = { year: 'numeric', month: '2-digit', day: '2-digit' };
+
+            // 卡加利
+            document.getElementById('clk-calgary').innerText = now.toLocaleTimeString('en-US', { ...options, timeZone: 'America/Edmonton' });
+            document.getElementById('date-calgary').innerText = now.toLocaleTimeString('zh-HK', { ...dateOptions, timeZone: 'America/Edmonton' }).split(' ')[0];
+
+            // 香港
+            document.getElementById('clk-hk').innerText = now.toLocaleTimeString('en-US', { ...options, timeZone: 'Asia/Hong_Kong' });
+            document.getElementById('date-hk').innerText = now.toLocaleTimeString('zh-HK', { ...dateOptions, timeZone: 'Asia/Hong_Kong' }).split(' ')[0];
+            const hkDateObj = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Hong_Kong' }));
+            document.getElementById('lunar-hk').innerText = getLunarDateString(hkDateObj);
+
+            // 東京
+            document.getElementById('clk-tokyo').innerText = now.toLocaleTimeString('en-US', { ...options, timeZone: 'Asia/Tokyo' });
+            document.getElementById('date-tokyo').innerText = now.toLocaleTimeString('zh-HK', { ...dateOptions, timeZone: 'Asia/Tokyo' }).split(' ')[0];
+        }
+        setInterval(updateClocks, 1000);
+        updateClocks();
+
+        // 2. 獲取天氣並渲染 Icon
+        async function fetchWeather(lat, lon, elementId) {
+            try {
+                const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=auto`);
+                const data = await res.json();
+                
+                const current = data.current_weather;
+                const daily = data.daily;
+
+                const currentWeatherInfo = getWeatherInfo(current.weathercode);
+                const day1WeatherInfo = getWeatherInfo(daily.weathercode[1]);
+                const day2WeatherInfo = getWeatherInfo(daily.weathercode[2]);
+
+                let html = `
+                    <div class="weather-current">
+                        <div class="weather-info">
+                            <i class="bi ${currentWeatherInfo.icon}"></i>
+                            <span>${currentWeatherInfo.text}</span>
+                        </div>
+                        <span class="temp">${Math.round(current.temperature)}°C</span>
+                    </div>
+                    <div class="weather-forecast">
+                        <div class="forecast-day">
+                            <div>明天</div>
+                            <i class="bi ${day1WeatherInfo.icon}"></i>
+                            <div>${Math.round(daily.temperature_2m_min[1])}°/${Math.round(daily.temperature_2m_max[1])}°</div>
+                        </div>
+                        <div class="forecast-day">
+                            <div>後天</div>
+                            <i class="bi ${day2WeatherInfo.icon}"></i>
+                            <div>${Math.round(daily.temperature_2m_min[2])}°/${Math.round(daily.temperature_2m_max[2])}°</div>
+                        </div>
+                    </div>
+                `;
+                document.getElementById(elementId).innerHTML = html;
+            } catch (error) {
+                document.getElementById(elementId).innerHTML = "天氣讀取失敗";
+            }
+        }
+
+        // 3. 獲取匯率
+        async function fetchExchangeRate() {
+            try {
+                const res = await fetch('https://open.er-api.com/v6/latest/USD');
+                const data = await res.json();
+                const rate = data.rates.CAD;
+                document.getElementById('usd-cad').innerText = rate.toFixed(4);
+            } catch (error) {
+                document.getElementById('usd-cad').innerText = "載入失敗";
+            }
+        }
+
+        // 4 & 5. 獲取 RSS 新聞
+        async function fetchNews(rssUrl, elementId) {
+            try {
+                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(rssUrl)}`;
+                const res = await fetch(proxyUrl);
+                const json = await res.json();
+                
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(json.contents, "text/xml");
+                const items = xmlDoc.getElementsByTagName("item");
+                
+                let html = "";
+                const maxItems = Math.min(items.length, 7);
+                
+                for(let i=0; i<maxItems; i++) {
+                    const title = items[i].getElementsByTagName("title")[0]?.textContent || "無標題";
+                    const link = items[i].getElementsByTagName("link")[0]?.textContent || "#";
+                    let pubDate = items[i].getElementsByTagName("pubDate")[0]?.textContent || "";
+                    
+                    if (pubDate) {
+                        const d = new Date(pubDate);
+                        pubDate = `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+                    }
+
+                    html += `
+                        <li class="news-item">
+                            <a href="${link}" target="_blank">${title}</a>
+                            <div class="news-time">${pubDate}</div>
+                        </li>
+                    `;
+                }
+                document.getElementById(elementId).innerHTML = html || "目前無最新新聞";
+            } catch (error) {
+                document.getElementById(elementId).innerHTML = "<li class='news-item'>新聞載入失敗，定時重試中...</li>";
+            }
+        }
+
+        // 整合所有每分鐘更新的數據呼叫
+        function refreshAllData() {
+            const now = new Date();
+            document.getElementById('update-status').innerText = `最後更新: ${now.toLocaleTimeString('zh-HK')}`;
+
+            // 呼叫天氣 (含新增的 Icon 渲染)
+            fetchWeather(51.0447, -114.0719, 'weather-calgary');
+            fetchWeather(22.3193, 114.1694, 'weather-hk');
+            fetchWeather(35.6762, 139.6503, 'weather-tokyo');
+
+            // 呼叫外匯與新聞
+            fetchExchangeRate();
+            fetchNews('https://rthk.hk/rthk/news/rss/c_expressnews_clocal.xml', 'hk-news');
+            fetchNews('http://feeds.bbci.co.uk/news/world/rss.xml', 'global-news');
+        }
+
+        // 初始運行
+        refreshAllData();
+
+        // 每分鐘自動重新抓取一次數據
+        setInterval(refreshAllData, 60000);
+    </script>
+</body>
+</html>
