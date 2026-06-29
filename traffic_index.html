@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>卡加利 ✕ 香港 (四路路況版)</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #38bdf8;
+            --accent-hk: #f43f5e;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #334155;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .refresh-tag {
+            font-size: 13px;
+            color: var(--text-muted);
+            background: #334155;
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+
+        /* 網格版面配置 */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 20px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 寬度分配 */
+        .col-city { grid-column: span 6; }
+        .col-news { grid-column: span 6; }
+        .col-traffic { grid-column: span 6; }
+
+        @media (max-width: 1024px) {
+            .col-city, .col-news, .col-traffic { grid-column: span 12; }
+        }
+
+        /* 城市時間與天氣樣式 */
+        .city-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 15px;
+        }
+
+        .city-name {
+            font-size: 22px;
+            font-weight: bold;
+            border-left: 4px solid var(--accent);
+            padding-left: 10px;
+        }
+
+        .city-name.hk { border-left-color: var(--accent-hk); }
+
+        .time-display {
+            font-size: 28px;
+            font-weight: 700;
+            font-family: monospace;
+            color: var(--text-main);
+            margin: 5px 0;
+        }
+
+        .date-display {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .weather-current {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(0,0,0,0.2);
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .temp-big {
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--accent);
+        }
+        .hk .temp-big { color: var(--accent-hk); }
+
+        /* 預報樣式 */
+        .forecast-box {
+            margin-top: 15px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .forecast-day {
+            background: rgba(255,255,255,0.03);
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        .forecast-date { color: var(--text-muted); margin-bottom: 4px; }
+
+        /* 新聞樣式 */
+        .news-container {
+            max-height: 480px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .news-item {
+            padding: 12px 0;
+            border-bottom: 1px solid #334155;
+            font-size: 14px;
+        }
+        .news-item:last-child { border: none; }
+
+        .news-item a {
+            color: var(--text-main);
+            text-decoration: none;
+            display: block;
+            margin-bottom: 5px;
+            line-height: 1.4;
+        }
+
+        .news-item a:hover { color: var(--accent); }
+
+        .news-meta {
+            font-size: 11px;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* 四路路況網格佈局 */
+        .traffic-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        @media (max-width: 640px) {
+            .traffic-grid { grid-template-columns: 1fr; }
+        }
+
+        .cam-container {
+            margin-bottom: 5px;
+        }
+
+        .cam-title {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--text-muted);
+        }
+
+        .cam-frame {
+            width: 100%;
+            height: 180px;
+            background: #0f172a;
+            border-radius: 8px;
+            border: 1px solid #334155;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .cam-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        /* 滾動條美化 */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>卡加利 ✕ 香港 </h1>
+        <div class="refresh-tag" id="refresh-status">數據初始化中...</div>
+    </header>
+
+    <div class="dashboard-grid">
+        
+        <div class="card col-city calgary">
+            <div class="city-header">
+                <div class="city-name">卡加利 (Calgary)</div>
+                <div class="date-display" id="yyc-date">----/--/--</div>
+            </div>
+            <div class="time-display" id="yyc-time">00:00:00</div>
+            
+            <div class="weather-current">
+                <div>
+                    <div style="font-size: 14px; color:var(--text-muted);">即時天氣</div>
+                    <div id="yyc-weather-txt" style="font-size:16px; margin-top:2px;">載入中...</div>
+                </div>
+                <div class="temp-big" id="yyc-temp">--°C</div>
+            </div>
+
+            <div class="forecast-box" id="yyc-forecast"></div>
+        </div>
+
+        <div class="card col-city hk">
+            <div class="city-header">
+                <div class="city-name hk">香港 (Hong Kong)</div>
+                <div class="date-display" id="hkg-date">----/--/--</div>
+            </div>
+            <div class="time-display" id="hkg-time">00:00:00</div>
+            
+            <div class="weather-current">
+                <div>
+                    <div style="font-size: 14px; color:var(--text-muted);">即時天氣</div>
+                    <div id="hkg-weather-txt" style="font-size:16px; margin-top:2px;">載入中...</div>
+                </div>
+                <div class="temp-big" id="hkg-temp">--°C</div>
+            </div>
+
+            <div class="forecast-box" id="hkg-forecast"></div>
+        </div>
+
+        <div class="card col-news">
+            <div class="city-name" style="border-left-color: #a855f7; margin-bottom: 15px;">香港 ✕ 全球即時焦點</div>
+            <div class="news-container" id="news-box">
+                <div style="padding:20px; color:var(--text-muted);">焦點新聞連線中...</div>
+            </div>
+        </div>
+
+        <div class="card col-traffic">
+            <div class="city-name" style="border-left-color: #eab308; margin-bottom: 15px;">卡加利指定路況相機</div>
+            
+            <div class="traffic-grid">
+                <div class="cam-container">
+                    <div class="cam-title">Camera 10 Deerfoot/130 Ave SE</div>
+                    <div class="cam-frame">
+                        <img id="img-cam10" src="" alt="Cam 11 載入中..." onerror="this.src='https://placehold.co/400x300/1e293b/94a3b8?text=Cam+10+Refreshing'">
+                    </div>
+                </div>
+
+                <div class="cam-container">
+                    <div class="cam-title">Camera 62 130 Ave/ 52 Street SE</div>
+                    <div class="cam-frame">
+                        <img id="img-cam62" src="" alt="Cam 63 載入中..." onerror="this.src='https://placehold.co/400x300/1e293b/94a3b8?text=Cam+62+Refreshing'">
+                    </div>
+                </div>
+
+                <div class="cam-container">
+                    <div class="cam-title">Camera 52 Deerfoot/Glenmore SE</div>
+                    <div class="cam-frame">
+                        <img id="img-cam52" src="" alt="Cam 52 載入中..." onerror="this.src='https://placehold.co/400x300/1e293b/94a3b8?text=Cam+52+Refreshing'">
+                    </div>
+                </div>
+
+                <div class="cam-container">
+                    <div class="cam-title">Camera 51 Deerfoot / McKnight</div>
+                    <div class="cam-frame">
+                        <img id="img-cam51" src="" alt="Cam 53 載入中..." onerror="this.src='https://placehold.co/400x300/1e293b/94a3b8?text=Cam+51+Refreshing'">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // 天氣代碼轉換對應表
+        function getWeatherDesc(code) {
+            const mapping = {
+                0: "晴朗無雲", 1: "晴時多雲", 2: "多雲", 3: "陰天",
+                45: "霧氣", 48: "霧淞", 51: "毛毛輕雨", 53: "毛毛雨",
+                61: "小雨", 63: "中雨", 65: "大雨", 71: "局部陣雪",
+                73: "中雪", 75: "大雪", 80: "陣雨", 95: "雷陣雨"
+            };
+            return mapping[code] || "多雲時晴";
+        }
+
+        // 1. 時間同步控制
+        function updateClocks() {
+            const now = new Date();
+            
+            const yycStr = now.toLocaleString("en-US", { timeZone: "America/Edmonton", hour12: false });
+            const yycDateStr = now.toLocaleDateString("zh-TW", { timeZone: "America/Edmonton", year: 'numeric', month: '2-digit', day: '2-digit' });
+            document.getElementById('yyc-time').innerText = yycStr.split(', ')[1];
+            document.getElementById('yyc-date').innerText = `${yycDateStr} (加西時間)`;
+
+            const hkgStr = now.toLocaleString("en-US", { timeZone: "Asia/Hong_Kong", hour12: false });
+            const hkgDateStr = now.toLocaleDateString("zh-TW", { timeZone: "Asia/Hong_Kong", year: 'numeric', month: '2-digit', day: '2-digit' });
+            document.getElementById('hkg-time').innerText = hkgStr.split(', ')[1];
+            document.getElementById('hkg-date').innerText = `${hkgDateStr} (香港時間)`;
+        }
+        setInterval(updateClocks, 1000);
+        updateClocks();
+
+        // 2. 獲取天氣與未來2天預報
+        async function fetchWeather() {
+            try {
+                const yycUrl = "https://api.open-meteo.com/v1/forecast?latitude=51.0447&longitude=-114.0719&current=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto";
+                const hkgUrl = "https://api.open-meteo.com/v1/forecast?latitude=22.3193&longitude=114.1694&current=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto";
+
+                const resYyc = await fetch(yycUrl).then(r => r.json());
+                document.getElementById('yyc-temp').innerText = `${Math.round(resYyc.current.temperature_2m)}°C`;
+                document.getElementById('yyc-weather-txt').innerText = getWeatherDesc(resYyc.current.weather_code);
+                
+                let yycForecastHtml = '';
+                for(let i=1; i<=2; i++) {
+                    yycForecastHtml += `
+                        <div class="forecast-day">
+                            <div class="forecast-date">${resYyc.daily.time[i].substring(5)}</div>
+                            <div style="font-weight:600;">${getWeatherDesc(resYyc.daily.weather_code[i])}</div>
+                            <div style="color:var(--accent); margin-top:2px;">${Math.round(resYyc.daily.temperature_2m_min[i])}° / ${Math.round(resYyc.daily.temperature_2m_max[i])}°C</div>
+                        </div>`;
+                }
+                document.getElementById('yyc-forecast').innerHTML = yycForecastHtml;
+
+                const resHkg = await fetch(hkgUrl).then(r => r.json());
+                document.getElementById('hkg-temp').innerText = `${Math.round(resHkg.current.temperature_2m)}°C`;
+                document.getElementById('hkg-weather-txt').innerText = getWeatherDesc(resHkg.current.weather_code);
+
+                let hkgForecastHtml = '';
+                for(let i=1; i<=2; i++) {
+                    hkgForecastHtml += `
+                        <div class="forecast-day">
+                            <div class="forecast-date">${resHkg.daily.time[i].substring(5)}</div>
+                            <div style="font-weight:600;">${getWeatherDesc(resHkg.daily.weather_code[i])}</div>
+                            <div style="color:var(--accent-hk); margin-top:2px;">${Math.round(resHkg.daily.temperature_2m_min[i])}° / ${Math.round(resHkg.daily.temperature_2m_max[i])}°C</div>
+                        </div>`;
+                }
+                document.getElementById('hkg-forecast').innerHTML = hkgForecastHtml;
+            } catch (e) { console.error("天氣獲取失敗", e); }
+        }
+
+        // 3. 獲取即時新聞
+        async function fetchNews() {
+            try {
+                const rssUrl = encodeURIComponent("https://news.google.com/rss?hl=zh-HK&gl=HK&ceid=HK:zh-Hant");
+                const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${rssUrl}`).then(r => r.json());
+                if (res.status === 'ok') {
+                    let newsHtml = '';
+                    res.items.slice(0, 8).forEach(item => {
+                        const pubDate = new Date(item.pubDate);
+                        const timeStr = pubDate.toLocaleTimeString('zh-HK', {hour: '2-digit', minute:'2-digit'});
+                        newsHtml += `
+                            <div class="news-item">
+                                <a href="${item.link}" target="_blank">${item.title}</a>
+                                <div class="news-meta"><span>${item.author || '香港即時焦點'}</span><span>今天 ${timeStr}</span></div>
+                            </div>`;
+                    });
+                    document.getElementById('news-box').innerHTML = newsHtml;
+                }
+            } catch (e) { console.error("新聞獲取失敗", e); }
+        }
+
+        // 4. 定時刷新與圖片跨域突破邏輯
+        function refreshDashboard() {
+            const now = new Date();
+            const cb = now.getTime(); // 取得動態時間戳記避免快取
+            document.getElementById('refresh-status').innerText = `上次同步時間: ${now.toLocaleTimeString()}`;
+            
+            fetchWeather();
+            fetchNews();
+            
+            // 定義指定的四個相機 URL
+            const cam10 = "https://trafficcam.calgary.ca/loc10.jpg";
+            const cam62 = "https://trafficcam.calgary.ca/loc62.jpg";
+            const cam52 = "https://trafficcam.calgary.ca/loc52.jpg";
+            const cam51 = "https://trafficcam.calgary.ca/loc51.jpg";
+            
+            // 透過公開的代理節點轉接並注入 cb 參數，達成每分鐘更新
+            document.getElementById('img-cam10').src = "https://images.weserv.nl/?url=" + encodeURIComponent(cam10) + "&cb=" + cb;
+            document.getElementById('img-cam62').src = "https://images.weserv.nl/?url=" + encodeURIComponent(cam62) + "&cb=" + cb;
+            document.getElementById('img-cam52').src = "https://images.weserv.nl/?url=" + encodeURIComponent(cam52) + "&cb=" + cb;
+            document.getElementById('img-cam51').src = "https://images.weserv.nl/?url=" + encodeURIComponent(cam51) + "&cb=" + cb;
+        }
+
+        // 網頁開啟時立即載入，此後每 60 秒（1分鐘）自動觸發
+        refreshDashboard();
+        setInterval(refreshDashboard, 60000);
+    </script>
+</body>
+</html>
